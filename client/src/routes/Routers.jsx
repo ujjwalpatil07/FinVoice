@@ -5,6 +5,8 @@ import Layout from "../layouts/Layout";
 import Login from "../pages/Login";
 import Signup from "../pages/Signup";
 import NotFound from "../components/NotFound";
+import DashboardLayout from "../layouts/DashboardLayout"
+import FinanceDashboard from "../pages/FinanceDashboard";
 
 export default function Routers() {
   return (
