@@ -1,6 +1,6 @@
 // src/components/dashboard/Sidebar.jsx
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     Home, PieChart, Wallet, Target, MessageSquare,
     BarChart3, CreditCard, Receipt, Settings, LogOut,
@@ -9,9 +9,11 @@ import {
 import { useUserContext } from '../../context/UserContext';
 
 export default function Sidebar() {
+
+    const navigate = useNavigate();
     const [isExpanded, setIsExpanded] = useState(true);
     const location = useLocation();
-    const { authUser } = useUserContext();
+    const { authUser, updateUser } = useUserContext();
 
     const navigationItems = [
         {
@@ -81,15 +83,14 @@ export default function Sidebar() {
 
     const NavItem = ({ item, showText = true }) => {
         const isActive = location.pathname === item.path;
-        
+
         return (
             <Link
                 to={item.path}
-                className={`flex items-center rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200 group ${
-                    isActive
+                className={`flex items-center rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200 group ${isActive
                         ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
                         : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
-                } ${showText ? 'justify-start' : 'justify-center'}`}
+                    } ${showText ? 'justify-start' : 'justify-center'}`}
             >
                 <div className={`flex-shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'}`}>
                     {item.icon}
@@ -98,11 +99,10 @@ export default function Sidebar() {
                     <>
                         <span className="ml-3 flex-1">{item.name}</span>
                         {item.badge && (
-                            <span className={`ml-2 px-2 py-1 text-xs rounded-full min-w-[20px] text-center ${
-                                typeof item.badge === 'number' 
+                            <span className={`ml-2 px-2 py-1 text-xs rounded-full min-w-[20px] text-center ${typeof item.badge === 'number'
                                     ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300'
                                     : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                            }`}>
+                                }`}>
                                 {item.badge}
                             </span>
                         )}
@@ -114,15 +114,14 @@ export default function Sidebar() {
 
     const NavItemCollapsed = ({ item }) => {
         const isActive = location.pathname === item.path;
-        
+
         return (
             <Link
                 to={item.path}
-                className={`flex items-center justify-center rounded-lg p-3 text-sm font-medium transition-all duration-200 group relative ${
-                    isActive
+                className={`flex items-center justify-center rounded-lg p-3 text-sm font-medium transition-all duration-200 group relative ${isActive
                         ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
                         : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
-                }`}
+                    }`}
                 title={item.name}
             >
                 <div className={`${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'}`}>
@@ -131,6 +130,11 @@ export default function Sidebar() {
             </Link>
         );
     };
+
+    const handleLogout = () => {
+        updateUser(null);
+        navigate("/login");
+    }
 
     return (
         <div className={`hidden md:flex bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ${isExpanded ? 'w-64' : 'w-16'} h-full flex flex-col`}>
@@ -200,7 +204,7 @@ export default function Sidebar() {
                             <NavItem key={item.name} item={item} showText={true} />
                         ))}
                         <button
-                            onClick={() => console.log('Logout clicked')}
+                            onClick={handleLogout}
                             className="flex items-center w-full rounded-lg px-3 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
                         >
                             <LogOut className="h-5 w-5" />
@@ -213,7 +217,7 @@ export default function Sidebar() {
                             <NavItemCollapsed key={item.name} item={item} />
                         ))}
                         <button
-                            onClick={() => console.log('Logout clicked')}
+                            onClick={handleLogout}
                             className="flex items-center justify-center rounded-lg p-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
                             title="Sign Out"
                         >
