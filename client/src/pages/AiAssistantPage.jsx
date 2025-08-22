@@ -11,6 +11,8 @@ import {
   Target
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { FaMicrophone } from "react-icons/fa6";
+import VoiceInput from "../components/dashboard/VoiceInput";
 
 export default function AIAssistantPage() {
   const navigate = useNavigate();
@@ -296,13 +298,14 @@ export default function AIAssistantPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask me anything about your finances..."
-            className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-l-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className=" flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-l-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             disabled={isLoading}
           />
+          <VoiceInput/>
           <button
             type="submit"
             disabled={isLoading || input.trim() === ""}
-            className={`px-4 py-3 rounded-r-lg ${
+            className={`px-4 py-3 rounded-r-lg ms-5 ${
               isLoading || input.trim() === ""
                 ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
                 : "bg-indigo-600 text-white hover:bg-indigo-700"
