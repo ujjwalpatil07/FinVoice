@@ -126,7 +126,7 @@ export default function Navbar() {
             <button
               data-mobile-menu-button
               onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-              className="lg:hidden p-2 rounded-md text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              className="md:hidden p-2 rounded-md text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               aria-label="Toggle mobile menu"
             >
               {isMobileSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}

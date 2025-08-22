@@ -9,7 +9,6 @@ export const UserProvider = ({ children }) => {
     // Simulate user data fetching
     const fetchUserData = async () => {
       try {
-        // In a real app, this would be an API call
         const userData = {
           id: 1,
           name: 'Nitin Gayke',
@@ -36,7 +35,6 @@ export const UserProvider = ({ children }) => {
   }, []);
 
 
-  // Save user to localStorage whenever it changes
   useEffect(() => {
     if (authUser) {
       localStorage.setItem("authUser", JSON.stringify(authUser));
@@ -54,7 +52,7 @@ export const UserProvider = ({ children }) => {
     }));
   };
 
-   const updateUser = (userData) => {
+  const updateUser = (userData) => {
     setAuthUser(userData);
   };
 

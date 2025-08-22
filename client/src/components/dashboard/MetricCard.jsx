@@ -42,7 +42,7 @@ export const MetricCard = ({
                         {title}
                     </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                        ₹{typeof value === "number" ? value.toLocaleString("en-IN") : value}
+                        {typeof value === "number" ? value.toLocaleString("en-IN") : value}
                     </p>
                     {change && (
                         <div className={`flex items-center mt-2 text-sm ${getChangeColor()}`}>
