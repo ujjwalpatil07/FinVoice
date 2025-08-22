@@ -11,6 +11,7 @@ export default function Navbar() {
 
   const navItems = [
     { name: 'Home', path: '/', icon: <Home className="h-4 w-4" /> },
+    { name: 'Dashboard', path: '/dashboard', icon: <User className="h-4 w-4" /> }, // ✅ New Dashboard link
     { name: 'Login', path: '/login', icon: <LogIn className="h-4 w-4" /> },
     { name: 'Signup', path: '/signup', icon: <User className="h-4 w-4" /> },
   ];
@@ -31,17 +32,16 @@ export default function Navbar() {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  location.pathname === item.path
+                className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${location.pathname === item.path
                     ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20'
                     : 'text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-                }`}
+                  }`}
               >
                 {item.icon}
                 <span>{item.name}</span>
               </Link>
             ))}
-            
+
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
@@ -61,7 +61,7 @@ export default function Navbar() {
             >
               {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
             </button>
-            
+
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none"
@@ -80,11 +80,10 @@ export default function Navbar() {
                   key={item.name}
                   to={item.path}
                   onClick={() => setIsMenuOpen(false)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                    location.pathname === item.path
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${location.pathname === item.path
                       ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20'
                       : 'text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`}
+                    }`}
                 >
                   {item.icon}
                   <span>{item.name}</span>

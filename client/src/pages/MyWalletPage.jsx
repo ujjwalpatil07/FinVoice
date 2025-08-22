@@ -7,13 +7,12 @@ import {
     Trash2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-// import { useUserContext } from "../context/UserContext";
+import { useUserContext } from "../context/UserContext";
 import CountUp from "react-countup";
 
 export default function MyWalletPage() {
     const navigate = useNavigate();
-
-    // const { authUser } = useUserContext();
+    const { authUser } = useUserContext();
 
     const [isLoading, setIsLoading] = useState(true);
     const [walletData, setWalletData] = useState({
@@ -26,21 +25,29 @@ export default function MyWalletPage() {
         const loadWalletData = async () => {
             setIsLoading(true);
             try {
-                // You can replace this mock data with API calls as needed
-                const mockWalletData = {
-                    balance: 48200.75,
-                    recentTransactions: [
-                        { id: 101, title: "Coffee Shop", amount: -350, date: "2025-08-20" },
-                        { id: 102, title: "Salary Deposit", amount: 75000, date: "2025-08-01" },
-                        { id: 103, title: "Electricity Bill", amount: -2300, date: "2025-07-30" },
-                        { id: 104, title: "Online Shopping", amount: -1200, date: "2025-07-29" },
-                    ],
-                    linkedCards: [
-                        { id: 1, cardType: "Visa", last4: "1234" },
-                        { id: 2, cardType: "Mastercard", last4: "5678" },
-                    ],
-                };
-                setWalletData(mockWalletData);
+                if (!authUser) {
+                    setWalletData({ balance: 0, recentTransactions: [], linkedCards: [] });
+                    return;
+                }
+
+                // Map schema data into walletData shape
+                const balance = authUser?.totalBalance || 0;
+
+                // Show last 5 transactions (from allTransactions)
+                const recentTransactions = (authUser?.allTransactions || [])
+                    .slice(-5) // last 5
+                    .reverse() // newest first
+                    .map((tx, idx) => ({
+                        id: idx + 1,
+                        title: tx?.title || "Transaction",
+                        amount: tx?.type === "income" ? tx?.amount : -(tx?.amount || 0),
+                        date: tx?.date,
+                    }));
+
+                // Placeholder: linkedCards isn’t in your schema, so keep it empty
+                const linkedCards = [];
+
+                setWalletData({ balance, recentTransactions, linkedCards });
             } catch (error) {
                 console.error("Failed to load wallet data:", error);
             } finally {
@@ -48,7 +55,7 @@ export default function MyWalletPage() {
             }
         };
         loadWalletData();
-    }, []);
+    }, [authUser]);
 
     if (isLoading) {
         return (
@@ -84,9 +91,13 @@ export default function MyWalletPage() {
                             <li key={tx.id} className="py-3 flex items-center justify-between">
                                 <div>
                                     <p className="font-medium text-gray-900 dark:text-white">{tx.title}</p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">{new Date(tx.date).toLocaleDateString()}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        {new Date(tx.date).toLocaleDateString()}
+                                    </p>
                                 </div>
-                                <span className={`font-semibold ${tx.amount > 0 ? "text-green-600" : "text-red-600"}`}>
+                                <span
+                                    className={`font-semibold ${tx.amount > 0 ? "text-green-600" : "text-red-600"}`}
+                                >
                                     {tx.amount > 0 ? "+" : "-"}₹{Math.abs(tx.amount).toLocaleString()}
                                 </span>
                             </li>
@@ -114,11 +125,15 @@ export default function MyWalletPage() {
                             <li key={card.id} className="py-3 flex items-center justify-between">
                                 <div className="flex items-center space-x-3">
                                     <CreditCard className="h-6 w-6 text-indigo-600" />
-                                    <p className="font-medium text-gray-900 dark:text-white">{card.cardType} •••• {card.last4}</p>
+                                    <p className="font-medium text-gray-900 dark:text-white">
+                                        {card.cardType} •••• {card.last4}
+                                    </p>
                                 </div>
                                 <button
                                     className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-600"
-                                    onClick={() => alert(`Remove card ${card.cardType} ending in ${card.last4}?`)}
+                                    onClick={() =>
+                                        alert(`Remove card ${card.cardType} ending in ${card.last4}?`)
+                                    }
                                 >
                                     <Trash2 className="h-5 w-5" />
                                 </button>

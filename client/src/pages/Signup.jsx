@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, ArrowLeft } from 'lucide-react';
+import { useSnackbar } from 'notistack';
 import axios from "axios";
 
 export default function Signup() {
     const navigate = useNavigate();
+    const { enqueueSnackbar } = useSnackbar();
 
     const [isLoading, setIsLoading] = useState(false);
-
     const [formData, setFormData] = useState({
         fullName: "",
         email: "",
@@ -24,14 +25,16 @@ export default function Signup() {
 
         try {
             setIsLoading(true);
-            const res = await axios.post("http://localhost:9001/signup", formData);
+            const res = await axios.post("http://localhost:9001/user/signup", formData);
 
             if (res?.status) {
-                console.log("Signup Successful");
-                navigate("/login"); 
+                enqueueSnackbar('Signup successful!', { variant: 'success' });
+                navigate("/login");
+            } else {
+                enqueueSnackbar(res?.data?.message || 'Signup failed', { variant: 'error' });
             }
         } catch (error) {
-            console.error("Signup error:", error.response?.data || error.message);
+            enqueueSnackbar(error.response?.data?.message || 'Something went wrong', { variant: 'error' });
         } finally {
             setIsLoading(false);
         }

@@ -68,7 +68,7 @@ export default function Sidebar() {
         }
     ];
 
-    const totalBalance = authUser?.bankAccounts?.reduce((total, account) => total + account.balance, 0) || 0;
+    const totalBalance = authUser?.totalBalance || 0;
 
     const NavItem = ({ item, showText = true }) => {
         const isActive = location.pathname === item.path;
@@ -77,8 +77,8 @@ export default function Sidebar() {
             <Link
                 to={item.path}
                 className={`flex items-center rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200 group ${isActive
-                        ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
-                        : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+                    ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
                     } ${showText ? 'justify-start' : 'justify-center'}`}
             >
                 <div className={`flex-shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'}`}>
@@ -89,8 +89,8 @@ export default function Sidebar() {
                         <span className="ml-3 flex-1">{item.name}</span>
                         {item.badge && (
                             <span className={`ml-2 px-2 py-1 text-xs rounded-full min-w-[20px] text-center ${typeof item.badge === 'number'
-                                    ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300'
-                                    : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300'
+                                : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                                 }`}>
                                 {item.badge}
                             </span>
@@ -108,8 +108,8 @@ export default function Sidebar() {
             <Link
                 to={item.path}
                 className={`flex items-center justify-center rounded-lg p-3 text-sm font-medium transition-all duration-200 group relative ${isActive
-                        ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
-                        : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+                    ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
                     }`}
                 title={item.name}
             >
@@ -126,8 +126,7 @@ export default function Sidebar() {
     }
 
     return (
-        <div className={`hidden md:flex bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ${isExpanded ? 'w-64' : 'w-16'} h-full flex flex-col`}>
-            {/* Header */}
+        <div className={`hidden md:flex bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ${isExpanded ? 'w-70' : 'w-20'} h-full flex flex-col`}>
             <div className="p-4 border-b border-gray-200 dark:border-gray-800">
                 <div className="flex items-center justify-between">
                     {isExpanded ? (
@@ -171,7 +170,7 @@ export default function Sidebar() {
             )}
 
             {/* Main Navigation */}
-            <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+            <nav className="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-hide">
                 {isExpanded ? (
                     navigationItems.map((item) => (
                         <NavItem key={item.name} item={item} showText={true} />
