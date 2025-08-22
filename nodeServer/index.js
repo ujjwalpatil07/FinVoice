@@ -24,24 +24,19 @@ app.use(
 
 connectDB();
 
-app.get("/", (req, res) => {
-  res.status(200).json({ message: "Server is running securely 🚀" });
-});
-
-app.get("*", (req, res) => {
-  res
-    .status(502)
-    .send({ result: "Hey, you are looking for a page that doesn't exist!" });
-});
-
-
-app.use("/", userAuthRoute);
+app.use("/user", userAuthRoute);
 
 app.use((err, req, res, next) => {
   return res.status(err.status || 500).json({
     success: false,
     message: err.message || "Internal Server Error",
   });
+});
+
+app.get("*", (req, res) => {
+  res
+    .status(502)
+    .send({ result: "Hey, you are looking for a page that doesn't exist!" });
 });
 
 const startServer = async () => {

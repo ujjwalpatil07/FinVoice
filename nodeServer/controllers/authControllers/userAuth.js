@@ -64,3 +64,25 @@ export const loginUser = async (req, res) => {
     user: { _id: user?._id, email },
   });
 };
+
+export const getLoginUser = async (req, res) => {
+  const { userId } = req.query; // ✅ use query instead of body
+
+  if (!userId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "User ID is required" });
+  }
+
+  const user = await User.findById(userId).select("-password"); // hide password
+
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+
+  res.status(200).json({
+    success: true,
+    user,
+  });
+};
+

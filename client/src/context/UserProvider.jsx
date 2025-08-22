@@ -1,31 +1,27 @@
 import { useMemo, useState, useEffect } from "react";
 import { UserContext } from "./UserContext";
+import axios from "axios";
 
 export const UserProvider = ({ children }) => {
   const [authUser, setAuthUser] = useState(null);
   const [authUserLoading, setAuthUserLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate user data fetching
     const fetchUserData = async () => {
       try {
-        const userData = {
-          id: 1,
-          name: 'Nitin Gayke',
-          email: 'nitin@finvoice.com',
-          avatar: null,
-          bankAccounts: [
-            { id: 1, name: 'HDFC Bank', balance: 85420.50, lastDigits: '4589' },
-            { id: 2, name: 'SBI Savings', balance: 32450.75, lastDigits: '7632' }
-          ],
-          notifications: [
-            { id: 1, message: 'Your monthly budget for Food is almost exhausted', read: false, timestamp: new Date() },
-            { id: 2, message: 'Investment suggestion available for your goals', read: true, timestamp: new Date(Date.now() - 86400000) }
-          ]
-        };
-        setAuthUser(userData);
+        const userId = localStorage.getItem("authUser"); // we only store ID
+
+        if (!userId) return;
+
+        const { data } = await axios.get("http://localhost:9001/user/get-user", {
+          params: { userId }, // ✅ send userId as query param
+        });
+
+        if (data?.success) {
+          setAuthUser(data?.user);
+        }
       } catch (error) {
-        console.error('Failed to fetch user data:', error);
+        console.error("Failed to fetch user data:", error);
       } finally {
         setAuthUserLoading(false);
       }
@@ -33,15 +29,6 @@ export const UserProvider = ({ children }) => {
 
     fetchUserData();
   }, []);
-
-
-  useEffect(() => {
-    if (authUser) {
-      localStorage.setItem("authUser", JSON.stringify(authUser));
-    } else {
-      localStorage.removeItem("authUser");
-    }
-  }, [authUser]);
 
   const markNotificationAsRead = (notificationId) => {
     setAuthUser(prev => ({
@@ -54,6 +41,10 @@ export const UserProvider = ({ children }) => {
 
   const updateUser = (userData) => {
     setAuthUser(userData);
+
+    if (!userData) {
+      localStorage.removeItem("authUser");
+    }
   };
 
   // Context value accessible everywhere

@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, HandIcon } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft } from 'lucide-react';
 import { FaFacebook, FaGoogle } from 'react-icons/fa6';
 import axios from 'axios';
+import { useSnackbar } from 'notistack';
+import { useUserContext } from '../context/UserContext';
 
 export default function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const { enqueueSnackbar } = useSnackbar();
+    const { updateUser } = useUserContext();
 
     const [formData, setFormData] = useState({
         email: "",
@@ -27,22 +31,36 @@ export default function Login() {
         setIsLoading(true);
 
         try {
-            const res = await axios.post("http://localhost:9001/login", formData);
+            const res = await axios.post("http://localhost:9001/user/login", formData);
 
             if (res?.data?.success) {
-                console.log("Login Successfull")
-                console.log(res.data)
-                localStorage.setItem("authUser", JSON.stringify(res?.data?.user));
-                navigate("/dashboard")
-            }else{
-                console.log(res.data)
+                updateUser(res?.data?.user);
+                enqueueSnackbar('Login successful! Welcome back!', {
+                    variant: 'success',
+                    autoHideDuration: 2000,
+                });
+                localStorage.setItem("authUser", res?.data?.user?._id);
+                navigate("/dashboard");
+            } else {
+                enqueueSnackbar(res.data.message || 'Login failed. Please try again.', {
+                    variant: 'error',
+                });
             }
         } catch (error) {
-            console.log(error)
+            const errorMessage = error.response?.data?.message || 'An error occurred during login.';
+            enqueueSnackbar(errorMessage, {
+                variant: 'error',
+            });
         } finally {
             setIsLoading(false);
             setFormData({ email: "", password: "" });
         }
+    };
+
+    const handleSocialLogin = (provider) => {
+        enqueueSnackbar(`${provider} login is coming soon!`, {
+            variant: 'info',
+        });
     };
 
     return (
@@ -128,10 +146,11 @@ export default function Login() {
 
                     <button
                         type="submit"
-                        className="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center"
+                        disabled={isLoading}
+                        className="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <LogIn className="h-5 w-5 mr-2" />
-                        {isLoading ? "Logging in ..." : "Log in"}
+                        {isLoading ? "Logging in..." : "Log in"}
                     </button>
                 </form>
 
@@ -148,11 +167,17 @@ export default function Login() {
                     </div>
 
                     <div className="mt-4 grid grid-cols-2 gap-3">
-                        <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                        <button
+                            onClick={() => handleSocialLogin('Google')}
+                            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                        >
                             <FaGoogle className="h-5 w-5 mr-2" />
                             Google
                         </button>
-                        <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                        <button
+                            onClick={() => handleSocialLogin('Facebook')}
+                            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                        >
                             <FaFacebook className="h-5 w-5 mr-2" />
                             Facebook
                         </button>

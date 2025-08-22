@@ -1,107 +1,68 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Plus, 
-  Target, 
-  Calendar, 
-  IndianRupee, 
-  Edit3, 
-  Trash2, 
-  ArrowLeft,
-  TrendingUp,
-  PieChart,
-  Sparkles
+import {
+  Plus, Target, Calendar, IndianRupee, Edit3, Trash2, ArrowLeft,
+  TrendingUp, PieChart, Sparkles
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useUserContext } from "../context/UserContext";
 
-export default function GoalsPage(){
+export default function GoalsPage() {
   const navigate = useNavigate();
+  const { authUser } = useUserContext();
+
   const [goals, setGoals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
-  const [filter, setFilter] = useState("all"); // all, active, completed
+  const [filter, setFilter] = useState("all");
 
   // Form state
   const [formData, setFormData] = useState({
-    title: "",
+    name: "",
     targetAmount: "",
     currentAmount: "",
-    deadline: "",
+    targetDate: "",
     category: "savings",
     priority: "medium",
     description: ""
   });
 
-  // Load mock data on component mount
+  // Load goals from authUser
   useEffect(() => {
-    const loadGoals = () => {
-      setIsLoading(true);
-      try {
-        const mockGoals = [
-          {
-            id: 1,
-            title: "Emergency Fund",
-            targetAmount: 100000,
-            currentAmount: 65000,
-            deadline: "2025-12-31",
-            category: "emergency",
-            priority: "high",
-            description: "Save for unexpected expenses",
-            createdAt: "2025-01-15",
-            completed: false
-          },
-          {
-            id: 2,
-            title: "Europe Vacation",
-            targetAmount: 250000,
-            currentAmount: 125000,
-            deadline: "2026-06-30",
-            category: "travel",
-            priority: "medium",
-            description: "Trip to France, Italy and Switzerland",
-            createdAt: "2025-03-10",
-            completed: false
-          },
-          {
-            id: 3,
-            title: "New Laptop",
-            targetAmount: 80000,
-            currentAmount: 80000,
-            deadline: "2025-08-30",
-            category: "electronics",
-            priority: "low",
-            description: "MacBook Pro for work",
-            createdAt: "2025-05-20",
-            completed: true
-          }
-        ];
-        setGoals(mockGoals);
-      } catch (error) {
-        console.error("Failed to load goals:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadGoals();
-  }, []);
+    setIsLoading(true);
+    try {
+      const userGoals = authUser?.goals?.map((g, idx) => ({
+        id: idx + 1, // add a local id
+        title: g?.name || "Untitled Goal",
+        targetAmount: g?.targetAmount || 0,
+        currentAmount: g?.currentAmount || 0,
+        deadline: g?.targetDate ? new Date(g.targetDate).toISOString().split("T")[0] : "",
+        category: g?.category || "savings",
+        priority: g?.priority || "medium",
+        description: g?.description || "",
+        createdAt: g?.createdAt ? new Date(g.createdAt).toISOString().split("T")[0] : "",
+        completed: g?.completed || false,
+      })) || [];
+      setGoals(userGoals);
+    } catch (err) {
+      console.error("Failed to load goals:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [authUser]);
 
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Reset form
   const resetForm = () => {
     setFormData({
-      title: "",
+      name: "",
       targetAmount: "",
       currentAmount: "",
-      deadline: "",
+      targetDate: "",
       category: "savings",
       priority: "medium",
       description: ""
@@ -109,42 +70,37 @@ export default function GoalsPage(){
     setEditingGoal(null);
   };
 
-  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    
     if (editingGoal) {
-      // Update existing goal
-      setGoals(goals.map(goal => 
-        goal.id === editingGoal.id 
+      setGoals(goals.map(goal =>
+        goal.id === editingGoal.id
           ? { ...goal, ...formData, targetAmount: Number(formData.targetAmount), currentAmount: Number(formData.currentAmount) }
           : goal
       ));
     } else {
-      // Add new goal
       const newGoal = {
         id: Date.now(),
         ...formData,
+        title: formData.name,
         targetAmount: Number(formData.targetAmount),
         currentAmount: Number(formData.currentAmount),
-        createdAt: new Date().toISOString().split('T')[0],
-        completed: false
+        createdAt: new Date().toISOString().split("T")[0],
+        completed: false,
       };
       setGoals([...goals, newGoal]);
     }
-    
     setShowForm(false);
     resetForm();
   };
 
-  // Start editing a goal
   const handleEdit = (goal) => {
     setEditingGoal(goal);
     setFormData({
-      title: goal.title,
+      name: goal.title,
       targetAmount: goal.targetAmount,
       currentAmount: goal.currentAmount,
-      deadline: goal.deadline,
+      targetDate: goal.deadline,
       category: goal.category,
       priority: goal.priority,
       description: goal.description
@@ -152,41 +108,34 @@ export default function GoalsPage(){
     setShowForm(true);
   };
 
-  // Delete a goal
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this goal?")) {
       setGoals(goals.filter(goal => goal.id !== id));
     }
   };
 
-  // Toggle goal completion
   const toggleCompletion = (id) => {
-    setGoals(goals.map(goal => 
-      goal.id === id 
-        ? { ...goal, completed: !goal.completed } 
-        : goal
+    setGoals(goals.map(goal =>
+      goal.id === id ? { ...goal, completed: !goal.completed } : goal
     ));
   };
 
-  // Calculate progress percentage
   const calculateProgress = (current, target) => {
-    return Math.min(100, Math.round((current / target) * 100));
+    return target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
   };
 
-  // Filter goals based on selected filter
   const filteredGoals = goals.filter(goal => {
     if (filter === "active") return !goal.completed;
     if (filter === "completed") return goal.completed;
     return true;
   });
 
-  // Calculate total goals statistics
-  const totalGoals = goals.length;
-  const completedGoals = goals.filter(goal => goal.completed).length;
-  const totalTargetAmount = goals.reduce((sum, goal) => sum + goal.targetAmount, 0);
-  const totalSavedAmount = goals.reduce((sum, goal) => sum + goal.currentAmount, 0);
-  const overallProgress = totalTargetAmount > 0 
-    ? Math.min(100, Math.round((totalSavedAmount / totalTargetAmount) * 100)) 
+  const totalGoals = goals?.length || 0;
+  const completedGoals = goals?.filter(g => g.completed)?.length || 0;
+  const totalTargetAmount = goals?.reduce((sum, g) => sum + (g.targetAmount || 0), 0) || 0;
+  const totalSavedAmount = goals?.reduce((sum, g) => sum + (g.currentAmount || 0), 0) || 0;
+  const overallProgress = totalTargetAmount > 0
+    ? Math.min(100, Math.round((totalSavedAmount / totalTargetAmount) * 100))
     : 0;
 
   if (isLoading) {
@@ -202,7 +151,7 @@ export default function GoalsPage(){
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
         <div className="flex items-center mb-4 sm:mb-0">
-          <button 
+          <button
             onClick={() => navigate(-1)}
             className="flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white mr-4"
           >
@@ -309,8 +258,8 @@ export default function GoalsPage(){
             <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No goals found</h3>
             <p className="text-gray-600 dark:text-gray-400">
-              {filter === "completed" 
-                ? "You haven't completed any goals yet." 
+              {filter === "completed"
+                ? "You haven't completed any goals yet."
                 : "Create your first financial goal to get started."}
             </p>
           </div>
@@ -320,16 +269,15 @@ export default function GoalsPage(){
             const daysRemaining = Math.ceil(
               (new Date(goal.deadline) - new Date()) / (1000 * 60 * 60 * 24)
             );
-            
+
             return (
               <div key={goal.id} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
                   <div className="flex items-center mb-2 md:mb-0">
-                    <div className={`p-2 rounded-full mr-3 ${
-                      goal.priority === "high" ? "bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400" :
-                      goal.priority === "medium" ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400" :
-                      "bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400"
-                    }`}>
+                    <div className={`p-2 rounded-full mr-3 ${goal.priority === "high" ? "bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400" :
+                        goal.priority === "medium" ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400" :
+                          "bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400"
+                      }`}>
                       <Target className="h-5 w-5" />
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{goal.title}</h3>
@@ -363,11 +311,10 @@ export default function GoalsPage(){
                     <span>{progress}%</span>
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                    <div 
-                      className={`h-2 rounded-full transition-all duration-700 ${
-                        progress < 30 ? "bg-red-500" :
-                        progress < 70 ? "bg-yellow-500" : "bg-green-500"
-                      }`} 
+                    <div
+                      className={`h-2 rounded-full transition-all duration-700 ${progress < 30 ? "bg-red-500" :
+                          progress < 70 ? "bg-yellow-500" : "bg-green-500"
+                        }`}
                       style={{ width: `${progress}%` }}
                     ></div>
                   </div>
@@ -388,11 +335,10 @@ export default function GoalsPage(){
                   </div>
                   <button
                     onClick={() => toggleCompletion(goal.id)}
-                    className={`mt-3 sm:mt-0 px-3 py-1 rounded-full text-sm font-medium ${
-                      goal.completed
+                    className={`mt-3 sm:mt-0 px-3 py-1 rounded-full text-sm font-medium ${goal.completed
                         ? "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
                         : "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300"
-                    }`}
+                      }`}
                   >
                     {goal.completed ? "Mark as Active" : "Mark as Completed"}
                   </button>
@@ -404,13 +350,13 @@ export default function GoalsPage(){
       </div>
 
       {/* AI Recommendation */}
-      <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-800 dark:via-gray-850 dark:to-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
+      <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
         <div className="flex items-center mb-4">
           <Sparkles className="h-6 w-6 text-yellow-500 mr-3" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">AI Recommendations</h3>
         </div>
         <p className="text-gray-700 dark:text-gray-300 mb-4">
-          Based on your goals, we recommend increasing your monthly savings by 15% to reach your targets faster. 
+          Based on your goals, we recommend increasing your monthly savings by 15% to reach your targets faster.
           Consider automating transfers to your goals right after you receive your income.
         </p>
         <button className="text-indigo-600 dark:text-indigo-400 text-sm font-medium hover:underline">
@@ -426,7 +372,7 @@ export default function GoalsPage(){
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                 {editingGoal ? "Edit Goal" : "Create New Goal"}
               </h2>
-              
+
               <form onSubmit={handleSubmit}>
                 <div className="space-y-4">
                   <div>
