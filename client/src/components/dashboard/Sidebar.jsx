@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     Home, PieChart, Wallet, Target, MessageSquare,
-    BarChart3, CreditCard, Receipt, Settings, LogOut,
+    BarChart3, CreditCard, Receipt, LogOut,
     ChevronRight, Sparkles, HelpCircle
 } from 'lucide-react';
 import { useUserContext } from '../../context/UserContext';
@@ -58,20 +58,9 @@ export default function Sidebar() {
             icon: <CreditCard className="h-5 w-5" />,
             badge: null
         },
-        {
-            name: 'Bills',
-            path: '/bills',
-            icon: <Receipt className="h-5 w-5" />,
-            badge: authUser?.upcomingBills?.length || null
-        }
     ];
 
     const secondaryItems = [
-        {
-            name: 'Settings',
-            path: '/settings',
-            icon: <Settings className="h-5 w-5" />
-        },
         {
             name: 'Help & Support',
             path: '/help',
