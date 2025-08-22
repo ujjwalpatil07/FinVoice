@@ -6,13 +6,16 @@ import './index.css'
 import App from './App.jsx'
 import { ThemeProvider } from "./context/ThemeProvider.jsx"
 import { UserProvider } from './context/UserProvider.jsx';
+import { SnackbarProvider } from 'notistack';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <ThemeProvider>
         <UserProvider>
-          <SnackbarProvider>
+          <SnackbarProvider maxSnack={3}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            autoHideDuration={2000}>
             <App />
           </SnackbarProvider>
         </UserProvider>

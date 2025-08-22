@@ -73,81 +73,8 @@ export default function AIAssistantPage() {
         timestamp: new Date()
       }
     ]);
-  }, []);
+  }, [userData.name]);
 
-  // Generate AI response based on user query
-  const generateAIResponse = (query) => {
-    setIsLoading(true);
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      let response = "";
-      const lowerQuery = query.toLowerCase();
-      
-      // Analyze query and generate appropriate response
-      if (lowerQuery.includes("save") || lowerQuery.includes("saving") || lowerQuery.includes("savings")) {
-        const savingsRate = ((userData.savings / userData.monthlyIncome) * 100).toFixed(1);
-        response = `Your current savings rate is ${savingsRate}%, which is ${savingsRate >= 20 ? 'excellent' : 'good but could be improved'}. `;
-        
-        if (savingsRate < 20) {
-          response += "I recommend aiming for at least 20%. You could achieve this by reducing spending on dining out and entertainment, which currently make up a significant portion of your expenses.";
-        } else {
-          response += "Great job! You're on track to meet your financial goals. Consider investing some of your savings for higher returns.";
-        }
-      } 
-      else if (lowerQuery.includes("spend") || lowerQuery.includes("spending") || lowerQuery.includes("expense")) {
-        const highestCategory = userData.spendingByCategory.reduce((prev, current) => 
-          (prev.amount > current.amount) ? prev : current
-        );
-        
-        response = `You're spending the most on ${highestCategory.category} (₹${highestCategory.amount.toLocaleString()}), which accounts for ${highestCategory.percentage}% of your expenses. `;
-        response += "To reduce spending, consider setting monthly budgets for each category. I notice your Food & Dining expenses are quite high - meal planning could help reduce these costs.";
-      }
-      else if (lowerQuery.includes("budget") || lowerQuery.includes("budgeting")) {
-        response = "Based on your income and expenses, I recommend the following budget: ";
-        response += "• Essentials (housing, utilities, groceries): 50% \n";
-        response += "• Financial goals (savings, investments): 20% \n";
-        response += "• Lifestyle (dining, entertainment): 20% \n";
-        response += "• Unexpected expenses: 10% \n\n";
-        response += "You're currently spending a bit more on lifestyle categories than recommended. Try tracking your daily expenses to stay within budget.";
-      }
-      else if (lowerQuery.includes("goal") || lowerQuery.includes("target")) {
-        response = "Here's the progress on your financial goals: \n";
-        userData.goals.forEach(goal => {
-          response += `• ${goal.title}: ${goal.progress}% complete (₹${(goal.target * goal.progress / 100).toLocaleString()} of ₹${goal.target.toLocaleString()}) \n`;
-        });
-        response += "\nTo accelerate your goal progress, consider allocating any bonuses or windfalls directly to these goals rather than increasing discretionary spending.";
-      }
-      else if (lowerQuery.includes("invest") || lowerQuery.includes("investment")) {
-        response = "Based on your financial situation, I recommend: \n";
-        response += "1. Build an emergency fund covering 3-6 months of expenses first \n";
-        response += "2. Consider low-cost index funds for long-term growth \n";
-        response += "3. Explore tax-saving investment options like ELSS funds \n";
-        response += "4. Diversify across different asset classes based on your risk tolerance \n\n";
-        response += "Would you like me to explain any of these options in more detail?";
-      }
-      else if (lowerQuery.includes("hello") || lowerQuery.includes("hi") || lowerQuery.includes("hey")) {
-        response = "Hello! How can I help with your financial questions today?";
-      }
-      else {
-        response = "I've analyzed your financial data and here's my insight: ";
-        response += `You have a good financial foundation with a balance of ₹${userData.balance.toLocaleString()}. `;
-        response += `Your income is ₹${userData.monthlyIncome.toLocaleString()} per month with expenses of ₹${userData.monthlyExpenses.toLocaleString()}. `;
-        response += "To optimize your finances, consider creating a detailed budget, increasing your savings rate, and reviewing your investment strategy. Is there a specific area you'd like to focus on?";
-      }
-      
-      setMessages(prev => [
-        ...prev,
-        {
-          id: prev.length + 1,
-          text: response,
-          sender: "ai",
-          timestamp: new Date()
-        }
-      ]);
-      setIsLoading(false);
-    }, 1000); // Simulate thinking time
-  };
 
   // Handle sending a message
   const handleSend = (e) => {
@@ -165,8 +92,25 @@ export default function AIAssistantPage() {
     setMessages(prev => [...prev, newMessage]);
     setInput("");
     
-    // Generate AI response
-    generateAIResponse(input);
+  };
+
+  const handleVoiceResult = (data) => {
+    // add user transcript
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: prev.length + 1,
+        text: data.user_text || "Voice input",
+        sender: "user",
+        timestamp: new Date(),
+      },
+      {
+        id: prev.length + 2,
+        text: data.message,
+        sender: "ai",
+        timestamp: new Date(),
+      },
+    ]);
   };
 
   // Quick action buttons
@@ -298,22 +242,23 @@ export default function AIAssistantPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask me anything about your finances..."
-            className=" flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-l-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-l-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             disabled={isLoading}
           />
-          <VoiceInput/>
+          {/* VoiceInput with callback */}
+          <VoiceInput onResult={handleVoiceResult} />
           <button
             type="submit"
             disabled={isLoading || input.trim() === ""}
-            className={`px-4 py-3 rounded-r-lg ms-5 ${
-              isLoading || input.trim() === ""
+            className={`px-4 py-3 rounded-r-lg ms-5 ${isLoading || input.trim() === ""
                 ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
                 : "bg-indigo-600 text-white hover:bg-indigo-700"
-            }`}
+              }`}
           >
             <Send className="h-5 w-5" />
           </button>
         </form>
+
         
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
           The AI assistant analyzes your financial data to provide personalized advice
