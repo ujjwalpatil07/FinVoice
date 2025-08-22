@@ -26,7 +26,7 @@ import { useUserContext } from "../../context/UserContext";
 
 export default function Navbar() {
   const { theme, toggleTheme } = useThemeContext();
-  const { authUser, markNotificationAsRead } = useUserContext();
+  const { authUser, markNotificationAsRead, updateUser } = useUserContext();
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -38,7 +38,6 @@ export default function Navbar() {
   const notificationsRef = useRef(null);
   const mobileSidebarRef = useRef(null);
 
-  // Close dropdowns if clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
@@ -56,6 +55,12 @@ export default function Navbar() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleSignOut = () => {
+    updateUser(null);
+    navigate("/login");
+    setIsProfileOpen(false);
+  }
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -260,10 +265,7 @@ export default function Navbar() {
                   </div>
                   <div className="p-2 border-t border-gray-200 dark:border-gray-700">
                     <button
-                      onClick={() => {
-                        console.log("Sign out clicked");
-                        setIsProfileOpen(false);
-                      }}
+                      onClick={handleSignOut}
                       className="flex items-center w-full px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition"
                     >
                       <LogOut className="h-4 w-4 mr-2" /> Sign Out
@@ -349,10 +351,7 @@ export default function Navbar() {
                 <Settings className="h-4 w-4 mr-2" /> Settings
               </a>
               <button
-                onClick={() => {
-                  console.log("Mobile sign out clicked");
-                  setIsMobileSidebarOpen(false);
-                }}
+                onClick={handleSignOut}
                 className="flex items-center w-full px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
               >
                 <LogOut className="h-4 w-4 mr-2" /> Sign Out

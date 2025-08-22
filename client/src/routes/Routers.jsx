@@ -6,6 +6,7 @@ import Login from "../pages/Login";
 import Signup from "../pages/Signup";
 import NotFound from "../components/NotFound";
 import DashboardLayout from "../layouts/DashboardLayout";
+import DashboardPage from "../pages/DashboardPage";
 
 export default function Routers() {
   return (
@@ -14,7 +15,7 @@ export default function Routers() {
       <Route path="/login" element={<Layout><Login /></Layout>} />
       <Route path="/signup" element={<Layout><Signup /></Layout>} />
 
-      <Route path="/dashboard" element={<DashboardLayout><div>Lorem ipsum dolor sit amet consectetur adipisicing elit. Corporis sequi provident iure aspernatur sed, autem optio illo maxime officiis animi reiciendis cumque eos, ex perferendis praesentium quam similique, architecto voluptatum!</div></DashboardLayout>} />
+      <Route path="/dashboard" element={<DashboardLayout><DashboardPage /></DashboardLayout>} />
 
       <Route path="*" element={<Layout><NotFound /></Layout>} />
     </Routes>

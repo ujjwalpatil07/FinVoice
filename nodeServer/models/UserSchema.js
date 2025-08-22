@@ -1,9 +1,9 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const { Schema, model } = mongoose;
 
 const UserSchema = new Schema(
   {
-    name: {
+    fullName: {
       type: String,
       required: true,
     },
@@ -14,16 +14,8 @@ const UserSchema = new Schema(
       sparse: true, // some demo users may not need email
     },
 
-    passwordHash: {
-      type: String,
-      select: false, // hide by default
-    },
-
-    // 🔑 Authentication + session
-    authProvider: {
-      type: String,
-      enum: ["local", "google", "guest"],
-      default: "guest",
+    password: {
+      type: String
     },
 
     // 💰 Financial profile

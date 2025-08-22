@@ -2,26 +2,12 @@ import User from "../../models/UserSchema.js";
 import bcryptjs from "bcryptjs";
 
 export const signUpUser = async (req, res) => {
-  const { email, password, confirmPassword } = req.body;
+  const { email, password, fullName } = req.body;
 
-  if (!email || !password || !confirmPassword) {
+  if (!email || !password || !fullName) {
     return res
       .status(400)
       .json({ success: false, message: "All fields are required" });
-  }
-
-  if (password !== confirmPassword) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Password doesn't match" });
-  }
-
-  const isPasswordValidated = /^(?=.*\d).{8,}$/.test(password);
-
-  if (!isPasswordValidated) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Password format doesn't match." });
   }
 
   const existingUser = await User.findOne({ email });
@@ -31,9 +17,19 @@ export const signUpUser = async (req, res) => {
       .json({ success: false, message: "User already exists" });
   }
 
+  const hashedPass = await bcryptjs.hash(password, 10);
+
+  const newUser = new User({
+    fullName,
+    email,
+    password: hashedPass,
+  });
+
+  await newUser.save();
+
   res.status(201).json({
     success: true,
-    message: "User info is Correct",
+    message: "User created successfully",
   });
 };
 
@@ -53,7 +49,7 @@ export const loginUser = async (req, res) => {
     });
   }
 
-  const isMatched = await bcryptjs.compare(password, user.password);
+  const isMatched = await bcryptjs.compare(password, user?.password);
 
   if (!isMatched) {
     return res.status(400).json({
@@ -68,4 +64,3 @@ export const loginUser = async (req, res) => {
     user: { _id: user?._id, email },
   });
 };
-

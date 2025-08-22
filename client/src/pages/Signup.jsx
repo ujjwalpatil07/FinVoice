@@ -1,15 +1,40 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, ArrowLeft } from 'lucide-react';
+import axios from "axios";
 
 export default function Signup() {
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const navigate = useNavigate();
 
-    const handleSubmit = e => {
+    const [isLoading, setIsLoading] = useState(false);
+
+    const [formData, setFormData] = useState({
+        fullName: "",
+        email: "",
+        password: ""
+    });
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleFormSubmit = async (e) => {
         e.preventDefault();
-        alert(`Signing up ${name} with email ${email}`);
+
+        try {
+            setIsLoading(true);
+            const res = await axios.post("http://localhost:9001/signup", formData);
+
+            if (res?.status) {
+                console.log("Signup Successful");
+                navigate("/login"); 
+            }
+        } catch (error) {
+            console.error("Signup error:", error.response?.data || error.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -26,7 +51,9 @@ export default function Signup() {
             </div>
 
             <div className="p-8">
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleFormSubmit} className="space-y-6">
+
+                    {/* Full Name */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Full Name
@@ -37,15 +64,17 @@ export default function Signup() {
                             </div>
                             <input
                                 type="text"
+                                name="fullName"
                                 required
-                                value={name}
-                                onChange={e => setName(e.target.value)}
+                                value={formData.fullName}
+                                onChange={handleInputChange}
                                 placeholder="Your full name"
                                 className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors"
                             />
                         </div>
                     </div>
-                    
+
+                    {/* Email */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Email Address
@@ -56,15 +85,17 @@ export default function Signup() {
                             </div>
                             <input
                                 type="email"
+                                name="email"
                                 required
-                                value={email}
-                                onChange={e => setEmail(e.target.value)}
+                                value={formData.email}
+                                onChange={handleInputChange}
                                 placeholder="you@example.com"
                                 className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors"
                             />
                         </div>
                     </div>
 
+                    {/* Password */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Password
@@ -75,9 +106,10 @@ export default function Signup() {
                             </div>
                             <input
                                 type="password"
+                                name="password"
                                 required
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
+                                value={formData.password}
+                                onChange={handleInputChange}
                                 placeholder="Create a strong password"
                                 className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors"
                             />
@@ -88,7 +120,7 @@ export default function Signup() {
                         type="submit"
                         className="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold py-3 rounded-lg transition-colors"
                     >
-                        Sign Up
+                        {isLoading ? "Signing up..." : "Sign up"}
                     </button>
                 </form>
 

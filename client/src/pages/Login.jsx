@@ -1,16 +1,48 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, HandIcon } from 'lucide-react';
 import { FaFacebook, FaGoogle } from 'react-icons/fa6';
+import axios from 'axios';
 
 export default function Login() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
 
-    const handleSubmit = e => {
+    const [formData, setFormData] = useState({
+        email: "",
+        password: "",
+    });
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prevData) => ({
+            ...prevData,
+            [name]: value,
+        }));
+    };
+
+    const handleFormSubmit = async (e) => {
         e.preventDefault();
-        alert(`Logging in with ${email}`);
+        setIsLoading(true);
+
+        try {
+            const res = await axios.post("http://localhost:9001/login", formData);
+
+            if (res?.data?.success) {
+                console.log("Login Successfull")
+                console.log(res.data)
+                localStorage.setItem("authUser", JSON.stringify(res?.data?.user));
+                navigate("/dashboard")
+            }else{
+                console.log(res.data)
+            }
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setIsLoading(false);
+            setFormData({ email: "", password: "" });
+        }
     };
 
     return (
@@ -27,7 +59,7 @@ export default function Login() {
             </div>
 
             <div className="p-8">
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleFormSubmit} className="space-y-6">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Email Address
@@ -38,9 +70,10 @@ export default function Login() {
                             </div>
                             <input
                                 type="email"
+                                name='email'
                                 required
-                                value={email}
-                                onChange={e => setEmail(e.target.value)}
+                                value={formData?.email}
+                                onChange={e => handleInputChange(e)}
                                 placeholder="you@example.com"
                                 className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors"
                             />
@@ -57,9 +90,10 @@ export default function Login() {
                             </div>
                             <input
                                 type={showPassword ? "text" : "password"}
+                                name='password'
                                 required
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
+                                value={formData?.password}
+                                onChange={e => handleInputChange(e)}
                                 placeholder="Enter your password"
                                 className="block w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors"
                             />
@@ -97,7 +131,7 @@ export default function Login() {
                         className="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center"
                     >
                         <LogIn className="h-5 w-5 mr-2" />
-                        Sign In
+                        {isLoading ? "Logging in ..." : "Log in"}
                     </button>
                 </form>
 
