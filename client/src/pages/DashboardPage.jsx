@@ -18,6 +18,7 @@ import { DoughnutChart } from "../components/charts/DoughnutChart";
 import { useUserContext } from "../context/UserContext";
 import CountUp from "react-countup";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function DashboardPage() {
     const navigate = useNavigate();
@@ -136,6 +137,39 @@ export default function DashboardPage() {
         }
     }, [authUser, timeRange]);
 
+    // In your DashboardPage.jsx
+    const handleAddExpense = async (expenseData) => {
+        try {
+            console.log('Sending expense data:', expenseData);
+
+            // Make API call to add expense
+            const response = await axios.post('http://localhost:9001/expense', {
+                email: "u@p.com", // Get this from your auth context
+                expense: expenseData
+            });
+
+            console.log('Expense added successfully:', response.data);
+            // Refresh your data or update state as needed
+
+            return response.data; // Return the response data
+
+        } catch (error) {
+            console.error('Error adding expense:', error);
+
+            // Check if we have a response with error details
+            if (error.response && error.response.data) {
+                console.error('Server error details:', error.response.data);
+                throw new Error(error.response.data.error || 'Failed to add expense');
+            } else if (error.request) {
+                console.error('No response received:', error.request);
+                throw new Error('No response from server. Please check your connection.');
+            } else {
+                console.error('Request setup error:', error.message);
+                throw new Error('Failed to setup request: ' + error.message);
+            }
+        }
+    };
+
     const incomeExpenseChartData = {
         labels: financialData?.incomeExpenseHistory?.map((item) => item?.month) ?? [],
         datasets: [
@@ -242,7 +276,8 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <MetricCard title="Total Balance" value={<CountUp end={financialData?.balance ?? 0} separator="," prefix="₹" />} change="0%" changeType="none" icon={Wallet} iconColor="text-blue-600" iconBg="bg-blue-100" />
                 <MetricCard title="Monthly Income" value={<CountUp end={financialData?.income ?? 0} separator="," prefix="₹" />} change="+8.2%" changeType="increase" icon={TrendingUp} iconColor="text-green-600" iconBg="bg-green-100" />
-                <MetricCard title="Monthly Expenses" value={<CountUp end={financialData?.expenses ?? 0} separator="," prefix="₹" />} change="-3.1%" changeType="decrease" icon={TrendingDown} iconColor="text-red-600" iconBg="bg-red-100" />
+                <MetricCard title="Monthly Expenses" value={<CountUp end={financialData?.expenses ?? 0} separator="," prefix="₹" />} change="-3.1%" changeType="decrease" icon={TrendingDown} iconColor="text-red-600" iconBg="bg-red-100" onAddExpense={handleAddExpense}
+/>
                 <MetricCard title="Savings Rate" value={`${((financialData?.savings / (financialData?.income || 1)) * 100).toFixed(1)}%`} change="+5.3%" changeType="increase" icon={PiggyBank} iconColor="text-purple-600" iconBg="bg-purple-100" />
             </div>
 
