@@ -158,7 +158,10 @@ export default function GoalsPage() {
                 const response = await deleteGoal(authUser._id, goalId);
 
                 if (response.success) {
-                    setAuthUser(response?.user)
+                    // Update the user context with the updated user data from response
+                    if (response.user) {
+                        setAuthUser(response.user);
+                    }
                     showNotification("Goal deleted successfully!");
                 } else {
                     throw new Error(response.message || "Delete operation failed");
@@ -344,7 +347,7 @@ export default function GoalsPage() {
                         </p>
                     </div>
                 ) : (
-                    filteredGoals.map(goal => {
+                    filteredGoals.map((goal, idx) => {
                         const progress = calculateProgress(goal.currentAmount, goal.targetAmount);
                         const daysRemaining = Math.ceil(
                             (new Date(goal.targetDate) - new Date()) / (1000 * 60 * 60 * 24)
@@ -375,7 +378,7 @@ export default function GoalsPage() {
                                             <Edit3 className="h-4 w-4" />
                                         </button>
                                         <button
-                                            onClick={() => handleDelete(goal._id)}
+                                            onClick={() => handleDelete(idx)}
                                             className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
                                         >
                                             <Trash2 className="h-4 w-4" />

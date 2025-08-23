@@ -320,57 +320,187 @@ export const deleteGoal = async (req, res) => {
     });
   }
 
-  const goal = user.goals.id(goalId);
-  if (!goal) {
-    return res.status(404).json({
+  const goalIndex = Number(goalId);
+
+  // Validate the goalId
+  if (isNaN(goalIndex) || goalIndex < 0 || goalIndex >= user.goals.length) {
+    return res.status(400).json({
       success: false,
-      message: "Goal not found",
+      message: "Invalid goal goalId",
     });
   }
 
-  goal.remove();
+  // Remove the goal at the given goalId
+  user.goals.splice(goalIndex, 1);
   await user.save();
 
-  res.json({
+  res.status(200).json({
     success: true,
     message: "Goal deleted successfully",
     user,
   });
 };
 
-// 🟢 Add Transaction
 export const addTransaction = async (req, res) => {
   const { userId } = req.params;
-  const { title, amount, type, category, relatedGoal, description } = req.body;
+  const { title, amount, type, category, relatedGoal, description, date } =
+    req.body;
 
   // Validate input
   if (!title || !amount || isNaN(amount) || !type) {
-    return res
-      .status(400)
-      .json({ message: "Title, amount, and type are required" });
+    return res.status(400).json({
+      success: false,
+      message: "Title, amount, and type are required",
+    });
   }
 
   const user = await User.findById(userId);
-  if (!user) return res.status(404).json({ message: "User not found" });
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
 
-  // Use the safe helper function
-  addTransactionRecord(user, {
-    title: title,
+  // Create transaction object
+  const newTransaction = {
+    title: title.toString(),
     amount: Number(amount),
-    type: type,
-    category: category,
-    relatedGoal: relatedGoal,
-    description: description,
-  });
+    type: type.toLowerCase(),
+    category: category || "General",
+    relatedGoal: relatedGoal || "",
+    description: description || "",
+    date: date ? new Date(date) : new Date(),
+  };
 
-  if (type === "income") {
-    user.totalBalance += Number(amount);
-  } else if (type === "expense") {
-    user.totalBalance -= Number(amount);
+  // Add to transactions array
+  user.allTransactions.push(newTransaction);
+
+  // Update total balance
+  if (newTransaction.type === "income") {
+    user.totalBalance += newTransaction.amount;
+  } else if (newTransaction.type === "expense") {
+    user.totalBalance -= newTransaction.amount;
   }
 
   await user.save();
-  res.json({ message: "Transaction added", user });
+
+  // Get the saved transaction (last one in array)
+  const savedTransaction =
+    user.allTransactions[user.allTransactions.length - 1];
+
+  res.status(201).json({
+    success: true,
+    message: "Transaction added successfully",
+    transaction: savedTransaction,
+    user,
+  });
+};
+
+// 🟢 Update Transaction
+export const updateTransaction = async (req, res) => {
+  const { userId, transactionId } = req.params;
+  const updates = req.body;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  const transaction = user.allTransactions.id(transactionId);
+  if (!transaction) {
+    return res.status(404).json({
+      success: false,
+      message: "Transaction not found",
+    });
+  }
+
+  // Store old amount and type for balance adjustment
+  const oldAmount = transaction.amount;
+  const oldType = transaction.type;
+
+  // Update fields
+  if (updates.title !== undefined) transaction.title = updates.title.toString();
+  if (updates.amount !== undefined) transaction.amount = Number(updates.amount);
+  if (updates.type !== undefined) transaction.type = updates.type.toLowerCase();
+  if (updates.category !== undefined) transaction.category = updates.category;
+  if (updates.relatedGoal !== undefined)
+    transaction.relatedGoal = updates.relatedGoal;
+  if (updates.description !== undefined)
+    transaction.description = updates.description;
+  if (updates.date !== undefined) transaction.date = new Date(updates.date);
+
+  // Adjust total balance
+  if (oldType === "income") {
+    user.totalBalance -= oldAmount;
+  } else if (oldType === "expense") {
+    user.totalBalance += oldAmount;
+  }
+
+  if (transaction.type === "income") {
+    user.totalBalance += transaction.amount;
+  } else if (transaction.type === "expense") {
+    user.totalBalance -= transaction.amount;
+  }
+
+  await user.save();
+
+  res.json({
+    success: true,
+    message: "Transaction updated successfully",
+    transaction: transaction,
+    user,
+  });
+};
+
+// 🟢 Delete Transaction by Index
+export const deleteTransaction = async (req, res) => {
+  const { userId, index } = req.params;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  const transactionIndex = Number(index);
+
+  // Validate the index
+  if (
+    isNaN(transactionIndex) ||
+    transactionIndex < 0 ||
+    transactionIndex >= user.allTransactions.length
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid transaction index",
+    });
+  }
+
+  // Get the transaction to adjust balance
+  const transaction = user.allTransactions[transactionIndex];
+
+  // Adjust total balance before deleting
+  if (transaction.type === "income") {
+    user.totalBalance -= transaction.amount;
+  } else if (transaction.type === "expense") {
+    user.totalBalance += transaction.amount;
+  }
+
+  // Remove the transaction at the given index
+  user.allTransactions.splice(transactionIndex, 1);
+  await user.save();
+
+  res.json({
+    success: true,
+    message: "Transaction deleted successfully",
+    user,
+  });
 };
 
 // 🟢 Add Budget

@@ -12,6 +12,8 @@ import {
   updateGoal,
   toggleGoalCompletion,
   deleteGoal,
+  updateTransaction,
+  deleteTransaction
 } from "../../controllers/financeControllers.js";
 
 const router = express.Router();
@@ -42,6 +44,8 @@ router.delete("/:userId/:goalId", wrapAsync(deleteGoal));
 
 // 📌 Transaction
 router.post("/:userId/transaction", wrapAsync(addTransaction));
+router.put("/:userId/transaction/:transactionId", wrapAsync(updateTransaction));
+router.delete("/:userId/transaction/:index", wrapAsync(deleteTransaction));
 
 // 📌 Budget
 router.post("/:userId/budget", wrapAsync(addBudget));

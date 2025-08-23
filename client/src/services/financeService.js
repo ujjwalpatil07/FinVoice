@@ -45,11 +45,6 @@ export const deleteGoal = async (userId, goalId) => {
   return response.data;
 };
 
-// 📌 Transaction
-export const addTransaction = async (userId, transactionData) => {
-  return await API.post(withUserId(userId, "/transaction"), transactionData);
-};
-
 // 📌 Budget
 export const addBudget = async (userId, budgetData) => {
   return await API.post(withUserId(userId, "/budget"), budgetData);
@@ -58,4 +53,26 @@ export const addBudget = async (userId, budgetData) => {
 // 📌 Update total balance
 export const updateTotalBalance = async (userId, balanceData) => {
   return await API.put(withUserId(userId, "/update-balance"), balanceData);
+};
+
+export const addTransaction = async (userId, transactionData) => {
+  const response = await API.post(`/${userId}/transaction`, transactionData);
+  return response.data;
+};
+
+export const updateTransaction = async (
+  userId,
+  transactionId,
+  transactionData
+) => {
+  const response = await API.put(
+    `/${userId}/transaction/${transactionId}`,
+    transactionData
+  );
+  return response.data;
+};
+
+export const deleteTransaction = async (userId, transactionId) => {
+  const response = await API.delete(`/${userId}/transaction/${transactionId}`);
+  return response.data;
 };
