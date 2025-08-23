@@ -241,9 +241,9 @@ export default function DashboardPage() {
             {/* Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <MetricCard title="Total Balance" value={<CountUp end={financialData?.balance ?? 0} separator="," prefix="₹" />} change="0%" changeType="none" icon={Wallet} iconColor="text-blue-600" iconBg="bg-blue-100" />
-                <MetricCard title="Monthly Income" value={<CountUp end={financialData?.income ?? 0} separator="," prefix="₹" />} change="+8.2%" changeType="increase" icon={TrendingUp} iconColor="text-green-600" iconBg="bg-green-100" />
-                <MetricCard title="Monthly Expenses" value={<CountUp end={financialData?.expenses ?? 0} separator="," prefix="₹" />} change="-3.1%" changeType="decrease" icon={TrendingDown} iconColor="text-red-600" iconBg="bg-red-100" />
-                <MetricCard title="Savings Rate" value={`${((financialData?.savings / (financialData?.income || 1)) * 100).toFixed(1)}%`} change="+5.3%" changeType="increase" icon={PiggyBank} iconColor="text-purple-600" iconBg="bg-purple-100" />
+                <MetricCard title="Monthly Income" value={<CountUp end={financialData?.income ?? 0} separator="," prefix="₹" />} change="0%" changeType="none" icon={TrendingUp} iconColor="text-green-600" iconBg="bg-green-100" />
+                <MetricCard title="Monthly Expenses" value={<CountUp end={financialData?.expenses ?? 0} separator="," prefix="₹" />} change="0%" changeType="none" icon={TrendingDown} iconColor="text-red-600" iconBg="bg-red-100" />
+                <MetricCard title="Savings Rate" value={`${((financialData?.savings / (financialData?.income || 1)) * 100).toFixed(1)}%`} change="+0%" changeType="none" icon={PiggyBank} iconColor="text-purple-600" iconBg="bg-purple-100" />
             </div>
 
             {/* Charts Grid */}

@@ -1,17 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
-import { 
-  Send, 
-  Sparkles, 
-  Brain, 
+import {
+  Send,
+  Sparkles,
+  Brain,
   ArrowLeft,
   Lightbulb,
   TrendingUp,
   Wallet,
   PieChart,
-  Target
+  Target,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { FaMicrophone } from "react-icons/fa6";
 import VoiceInput from "../components/dashboard/VoiceInput";
 
 export default function AIAssistantPage() {
@@ -20,33 +19,6 @@ export default function AIAssistantPage() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
-
-  // Mock user financial data
-  const userData = {
-    name: "Aditya",
-    monthlyIncome: 125000,
-    monthlyExpenses: 39579.5,
-    savings: 25420.5,
-    balance: 85420.5,
-    goals: [
-      { title: "Emergency Fund", progress: 65, target: 100000 },
-      { title: "Europe Vacation", progress: 50, target: 250000 },
-      { title: "New Laptop", progress: 100, target: 80000 }
-    ],
-    spendingByCategory: [
-      { category: "Food & Dining", amount: 12500, percentage: 32 },
-      { category: "Transportation", amount: 8500, percentage: 21 },
-      { category: "Entertainment", amount: 6500, percentage: 16 },
-      { category: "Utilities", amount: 7500, percentage: 19 },
-      { category: "Shopping", amount: 4500, percentage: 11 },
-    ],
-    recentTransactions: [
-      { description: "Grocery Store", amount: -4500, date: "2025-08-15" },
-      { description: "Salary Credit", amount: 125000, date: "2025-08-01" },
-      { description: "Netflix", amount: -499, date: "2025-08-10" },
-      { description: "Petrol", amount: -1800, date: "2025-08-12" },
-    ]
-  };
 
   // Scroll to bottom of chat
   const scrollToBottom = () => {
@@ -57,60 +29,127 @@ export default function AIAssistantPage() {
     scrollToBottom();
   }, [messages]);
 
-  // Initialize with welcome message
-  useEffect(() => {
-    setMessages([
-      {
-        id: 1,
-        text: `Hi ${userData.name}! I'm your financial AI assistant. I can help you analyze your spending, suggest ways to save more, and provide personalized financial advice. What would you like to know?`,
-        sender: "ai",
-        timestamp: new Date()
-      },
-      {
-        id: 2,
-        text: "Try asking me questions like: 'How can I save more money?', 'Where am I spending the most?', or 'What's my savings rate?'",
-        sender: "ai",
-        timestamp: new Date()
-      }
-    ]);
-  }, [userData.name]);
+  // Call backend API
+  const fetchAIResponse = async (queryText, tempId) => {
+    setIsLoading(true);
 
+    try {
+      const res = await fetch("http://127.0.0.1:8000/process-text/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: queryText }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Server error: ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      // Replace placeholder with actual AI response
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === tempId
+            ? {
+              ...m,
+              text: data.message || "No response received",
+              loading: false,
+              isThinking: false // Add this flag
+            }
+            : m
+        )
+      );
+    } catch (err) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === tempId
+            ? {
+              ...m,
+              text: `❌ Failed to fetch response: ${err.message}`,
+              error: true,
+              loading: false,
+              isThinking: false // Add this flag
+            }
+            : m
+        )
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Handle sending a message
   const handleSend = (e) => {
     e.preventDefault();
-    if (input.trim() === "") return;
-    
-    // Add user message
-    const newMessage = {
-      id: messages.length + 1,
+    if (input.trim() === "" || isLoading) return;
+
+    const userMessage = {
+      id: Date.now(),
       text: input,
       sender: "user",
-      timestamp: new Date()
+      timestamp: new Date(),
+      loading: false,
+      isThinking: false
     };
-    
-    setMessages(prev => [...prev, newMessage]);
+
+    const tempId = Date.now() + 1;
+    const aiPlaceholder = {
+      id: tempId,
+      text: "Thinking...", // Show text instead of empty string
+      sender: "ai",
+      loading: true,
+      isThinking: true, // Special flag for thinking state
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage, aiPlaceholder]);
+    const queryText = input;
     setInput("");
-    
+
+    fetchAIResponse(queryText, tempId);
   };
 
-  const handleVoiceResult = (data) => {
-    // add user transcript
+  // Handle voice input result
+  const handleVoiceResult = async (data) => {
+    if (isLoading) return;
+
+    const userMsgId = Date.now();
+    const tempId = userMsgId + 1;
+
     setMessages((prev) => [
       ...prev,
       {
-        id: prev.length + 1,
+        id: userMsgId,
         text: data.user_text || "Voice input",
         sender: "user",
         timestamp: new Date(),
+        loading: false,
+        isThinking: false
       },
       {
-        id: prev.length + 2,
-        text: data.message,
+        id: tempId,
+        text: "Thinking...", // Show text instead of empty string
         sender: "ai",
+        loading: true,
+        isThinking: true, // Special flag for thinking state
         timestamp: new Date(),
       },
     ]);
+
+    if (data.message) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === tempId ? {
+            ...m,
+            text: data.message,
+            loading: false,
+            isThinking: false
+          } : m
+        )
+      );
+    } else {
+      fetchAIResponse(data.user_text || "Voice input", tempId);
+    }
   };
 
   // Quick action buttons
@@ -118,26 +157,27 @@ export default function AIAssistantPage() {
     {
       title: "Savings Advice",
       icon: TrendingUp,
-      query: "How can I save more money?"
+      query: "How can I save more money?",
     },
     {
       title: "Spending Analysis",
       icon: PieChart,
-      query: "Where am I spending the most?"
+      query: "Where am I spending the most?",
     },
     {
       title: "Budget Help",
       icon: Wallet,
-      query: "Help me create a budget"
+      query: "Help me create a budget",
     },
     {
       title: "Goals Review",
       icon: Target,
-      query: "How are my goals progressing?"
-    }
+      query: "How are my goals progressing?",
+    },
   ];
 
   const handleQuickAction = (query) => {
+    if (isLoading) return;
     setInput(query);
   };
 
@@ -146,7 +186,7 @@ export default function AIAssistantPage() {
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center">
-          <button 
+          <button
             onClick={() => navigate(-1)}
             className="flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white mr-4"
           >
@@ -157,8 +197,12 @@ export default function AIAssistantPage() {
               <Sparkles className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">Financial AI Assistant</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Powered by smart analysis of your financial data</p>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                Financial AI Assistant
+              </h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Powered by smart analysis of your financial data
+              </p>
             </div>
           </div>
         </div>
@@ -171,7 +215,11 @@ export default function AIAssistantPage() {
             <button
               key={index}
               onClick={() => handleQuickAction(action.query)}
-              className="flex-shrink-0 flex items-center px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
+              disabled={isLoading}
+              className={`flex-shrink-0 flex items-center px-4 py-2 rounded-full transition-colors ${isLoading
+                ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                : "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30"
+                }`}
             >
               <action.icon className="h-4 w-4 mr-2" />
               <span className="text-sm font-medium">{action.title}</span>
@@ -182,55 +230,81 @@ export default function AIAssistantPage() {
 
       {/* Chat Container */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.length === 0 && (
+          <div className="text-center py-12">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 dark:bg-indigo-900/20 rounded-full mb-4">
+              <Brain className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              Ask me anything about your finances!
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400">
+              I can help with savings advice, spending analysis, budget planning, and more.
+            </p>
+          </div>
+        )}
+
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+            className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"
+              }`}
           >
             <div
-              className={`max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl rounded-2xl p-4 ${
-                message.sender === "user"
-                  ? "bg-indigo-600 text-white"
+              className={`max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl rounded-2xl p-4 ${message.sender === "user"
+                ? "bg-indigo-600 text-white"
+                : message.error
+                  ? "bg-red-100 text-red-800 border border-red-300"
                   : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700"
-              }`}
+                }`}
             >
               <div className="flex items-start">
-                {message.sender === "ai" && (
+                {message.sender === "ai" && !message.error && (
                   <div className="p-1 rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400 mr-2">
                     <Brain className="h-4 w-4" />
                   </div>
                 )}
-                <div className="whitespace-pre-line">{message.text}</div>
+                <div className="whitespace-pre-line">
+                  {message.isThinking ? ( // Use isThinking flag instead of loading
+                    <div className="flex items-center space-x-2">
+                      <div className="flex space-x-1">
+                        <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div
+                          className="h-2 w-2 bg-gray-400 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.1s" }}
+                        ></div>
+                        <div
+                          className="h-2 w-2 bg-gray-400 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.2s" }}
+                        ></div>
+                      </div>
+                      <span className="text-sm text-gray-500">Thinking...</span>
+                    </div>
+                  ) : (
+                    message.text
+                  )}
+                </div>
                 {message.sender === "user" && (
                   <div className="p-1 rounded-full bg-indigo-500 ml-2">
                     <Lightbulb className="h-4 w-4" />
                   </div>
                 )}
               </div>
-              <p className={`text-xs mt-2 ${message.sender === "user" ? "text-indigo-200" : "text-gray-500"}`}>
-                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </p>
+              {!message.isThinking && ( // Don't show timestamp for thinking messages
+                <p
+                  className={`text-xs mt-2 ${message.sender === "user" ? "text-indigo-200" : "text-gray-500"
+                    }`}
+                >
+                  {message.timestamp.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              )}
             </div>
           </div>
         ))}
-        
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 max-w-xs md:max-w-md">
-              <div className="flex items-center">
-                <div className="p-1 rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400 mr-2">
-                  <Brain className="h-4 w-4" />
-                </div>
-                <div className="flex space-x-1">
-                  <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
-                  <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.4s" }}></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -242,28 +316,41 @@ export default function AIAssistantPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask me anything about your finances..."
-            className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-l-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             disabled={isLoading}
+            className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-l-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
           />
           {/* VoiceInput with callback */}
-          <VoiceInput onResult={handleVoiceResult} />
+          <VoiceInput onResult={handleVoiceResult} disabled={isLoading} />
           <button
             type="submit"
-            disabled={isLoading || input.trim() === ""}
-            className={`px-4 py-3 rounded-r-lg ms-5 ${isLoading || input.trim() === ""
-                ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
-                : "bg-indigo-600 text-white hover:bg-indigo-700"
+            disabled={input.trim() === "" || isLoading}
+            className={`px-4 py-3 rounded-r-lg ms-5 ${input.trim() === "" || isLoading
+              ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+              : "bg-indigo-600 text-white hover:bg-indigo-700"
               }`}
           >
-            <Send className="h-5 w-5" />
+            {isLoading ? (
+              <div className="flex space-x-1">
+                <div className="h-2 w-2 bg-white rounded-full animate-bounce"></div>
+                <div
+                  className="h-2 w-2 bg-white rounded-full animate-bounce"
+                  style={{ animationDelay: "0.1s" }}
+                ></div>
+                <div
+                  className="h-2 w-2 bg-white rounded-full animate-bounce"
+                  style={{ animationDelay: "0.2s" }}
+                ></div>
+              </div>
+            ) : (
+              <Send className="h-5 w-5" />
+            )}
           </button>
         </form>
 
-        
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
           The AI assistant analyzes your financial data to provide personalized advice
         </p>
       </div>
     </div>
   );
-};
+}

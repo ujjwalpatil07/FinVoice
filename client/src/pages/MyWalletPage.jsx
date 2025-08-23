@@ -9,10 +9,21 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useUserContext } from "../context/UserContext";
 import CountUp from "react-countup";
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    TextField,
+} from "@mui/material";
+import { useSnackbar } from "notistack";
+import { addExpense, addIncome } from "../services/financeService";
 
 export default function MyWalletPage() {
     const navigate = useNavigate();
-    const { authUser } = useUserContext();
+    const { authUser, setAuthUser } = useUserContext();
+    const { enqueueSnackbar } = useSnackbar();
 
     const [isLoading, setIsLoading] = useState(true);
     const [walletData, setWalletData] = useState({
@@ -20,6 +31,14 @@ export default function MyWalletPage() {
         recentTransactions: [],
         linkedCards: [],
     });
+
+    // dialog state
+    const [openExpenseDialog, setOpenExpenseDialog] = useState(false);
+    const [openIncomeDialog, setOpenIncomeDialog] = useState(false);
+
+    // form state
+    const [expenseForm, setExpenseForm] = useState({ title: "", amount: "", category: "" });
+    const [incomeForm, setIncomeForm] = useState({ amount: "", reason: "" });
 
     useEffect(() => {
         const loadWalletData = async () => {
@@ -30,13 +49,11 @@ export default function MyWalletPage() {
                     return;
                 }
 
-                // Map schema data into walletData shape
                 const balance = authUser?.totalBalance || 0;
 
-                // Show last 5 transactions (from allTransactions)
                 const recentTransactions = (authUser?.allTransactions || [])
-                    .slice(-5) // last 5
-                    .reverse() // newest first
+                    .slice(-5)
+                    .reverse()
                     .map((tx, idx) => ({
                         id: idx + 1,
                         title: tx?.title || "Transaction",
@@ -44,10 +61,7 @@ export default function MyWalletPage() {
                         date: tx?.date,
                     }));
 
-                // Placeholder: linkedCards isn’t in your schema, so keep it empty
-                const linkedCards = [];
-
-                setWalletData({ balance, recentTransactions, linkedCards });
+                setWalletData({ balance, recentTransactions, linkedCards: [] });
             } catch (error) {
                 console.error("Failed to load wallet data:", error);
             } finally {
@@ -56,6 +70,39 @@ export default function MyWalletPage() {
         };
         loadWalletData();
     }, [authUser]);
+
+    // 📌 Handle expense submit
+    const handleAddExpense = async () => {
+        try {
+            const res = await addExpense(authUser?._id, {
+                title: expenseForm.title,
+                amount: Number(expenseForm.amount),
+                category: expenseForm.category,
+            });
+            setAuthUser(res.data.user); // update global user
+            enqueueSnackbar("Expense added successfully", { variant: "success" });
+            setOpenExpenseDialog(false);
+            setExpenseForm({ title: "", amount: "", category: "" });
+        } catch (err) {
+            console.error(err);
+            enqueueSnackbar(err.response?.data?.message || "Failed to add expense", { variant: "error" });
+        }
+    };
+
+    const handleAddIncome = async () => {
+        try {
+            const res = await addIncome(authUser._id, {
+                amount: Number(incomeForm.amount),
+                reason: incomeForm.reason,
+            });
+            setAuthUser(res.data.user); // update global user
+            enqueueSnackbar("Income added successfully", { variant: "success" });
+            setOpenIncomeDialog(false);
+            setIncomeForm({ amount: "", reason: "" });
+        } catch (err) {
+            enqueueSnackbar(err.response?.data?.message || "Failed to add income", { variant: "error" });
+        }
+    };
 
     if (isLoading) {
         return (
@@ -114,42 +161,13 @@ export default function MyWalletPage() {
                 </div>
             </div>
 
-            {/* Linked Cards */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Linked Cards</h2>
-                {walletData.linkedCards.length === 0 ? (
-                    <p className="text-gray-500 dark:text-gray-400">No cards linked.</p>
-                ) : (
-                    <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {walletData.linkedCards.map((card) => (
-                            <li key={card.id} className="py-3 flex items-center justify-between">
-                                <div className="flex items-center space-x-3">
-                                    <CreditCard className="h-6 w-6 text-indigo-600" />
-                                    <p className="font-medium text-gray-900 dark:text-white">
-                                        {card.cardType} •••• {card.last4}
-                                    </p>
-                                </div>
-                                <button
-                                    className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-600"
-                                    onClick={() =>
-                                        alert(`Remove card ${card.cardType} ending in ${card.last4}?`)
-                                    }
-                                >
-                                    <Trash2 className="h-5 w-5" />
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
-
             {/* Quick Actions */}
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <button
                         className="flex flex-col items-center p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg hover:scale-105 hover:shadow-md transition-transform"
-                        onClick={() => navigate("/add-expense")}
+                        onClick={() => setOpenExpenseDialog(true)}
                     >
                         <Wallet className="h-6 w-6 text-indigo-600 dark:text-indigo-400 mb-2" />
                         <span className="text-sm font-medium text-gray-900 dark:text-white">Add Expense</span>
@@ -157,7 +175,7 @@ export default function MyWalletPage() {
 
                     <button
                         className="flex flex-col items-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg hover:scale-105 hover:shadow-md transition-transform"
-                        onClick={() => navigate("/add-income")}
+                        onClick={() => setOpenIncomeDialog(true)}
                     >
                         <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400 mb-2" />
                         <span className="text-sm font-medium text-gray-900 dark:text-white">Add Income</span>
@@ -172,6 +190,60 @@ export default function MyWalletPage() {
                     </button>
                 </div>
             </div>
+
+            {/* Expense Dialog */}
+            <Dialog open={openExpenseDialog} onClose={() => setOpenExpenseDialog(false)} fullWidth maxWidth="sm" >
+                <DialogTitle>Add Expense</DialogTitle>
+                <DialogContent className="flex flex-col gap-4 mt-2">
+                    <TextField
+                        label="Title"
+                        value={expenseForm.title}
+                        onChange={(e) => setExpenseForm({ ...expenseForm, title: e.target.value })}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Amount"
+                        type="number"
+                        value={expenseForm.amount}
+                        onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Category"
+                        value={expenseForm.category}
+                        onChange={(e) => setExpenseForm({ ...expenseForm, category: e.target.value })}
+                        fullWidth
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenExpenseDialog(false)}>Cancel</Button>
+                    <Button onClick={handleAddExpense} variant="contained" color="primary">Save</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Income Dialog */}
+            <Dialog open={openIncomeDialog} onClose={() => setOpenIncomeDialog(false)} fullWidth maxWidth="sm" >
+                <DialogTitle>Add Income</DialogTitle>
+                <DialogContent className="flex flex-col gap-4 mt-2">
+                    <TextField
+                        label="Amount"
+                        type="number"
+                        value={incomeForm.amount}
+                        onChange={(e) => setIncomeForm({ ...incomeForm, amount: e.target.value })}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Reason"
+                        value={incomeForm.reason}
+                        onChange={(e) => setIncomeForm({ ...incomeForm, reason: e.target.value })}
+                        fullWidth
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenIncomeDialog(false)}>Cancel</Button>
+                    <Button onClick={handleAddIncome} variant="contained" color="success">Save</Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 }

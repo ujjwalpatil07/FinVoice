@@ -27,37 +27,59 @@ const UserSchema = new Schema(
 
     monthlyIncome: [
       {
-        amount: Number,
+        amount: {
+          type: Number,
+          required: true,
+          default: 0,
+        },
         date: {
           type: Date,
           default: Date.now,
         },
-        reason: String, // "salary increase", "new job", "bonus", etc.
+        reason: {
+          type: String,
+          default: "Income",
+        },
       },
     ],
 
     monthlyExpenses: [
       {
-        title: String, // "Grocery Store", "Netflix", etc.
-        amount: Number, // 4500, 499, etc.
-        category: String, // "Food", "Entertainment", etc.
+        title: {
+          type: String,
+          required: true,
+          default: "Expense",
+        },
+        amount: {
+          type: Number,
+          required: true,
+          default: 0,
+        },
+        category: {
+          type: String,
+          default: "General",
+        },
         date: {
           type: Date,
           default: Date.now,
         },
         type: {
-          // "expense" or "income"
           type: String,
           default: "expense",
         },
       },
     ],
 
-    // 🐖 SAVINGS (Saving rate = (Savings / Income) * 100)
     savings: [
       {
-        amount: Number,
-        rate: Number,
+        amount: {
+          type: Number,
+          default: 0,
+        },
+        rate: {
+          type: Number,
+          default: 0,
+        },
         date: {
           type: Date,
           default: Date.now,
@@ -65,7 +87,6 @@ const UserSchema = new Schema(
       },
     ],
 
-    // 📈 INVESTMENT PERFORMANCE
     investments: {
       currentValue: {
         type: Number,
@@ -77,24 +98,44 @@ const UserSchema = new Schema(
             type: Date,
             default: Date.now,
           },
-          value: Number,
-          growth: Number, // Percentage growth from previous Growth % = ((Current Value - Previous Value) / Previous Value) * 100
+          value: {
+            type: Number,
+            default: 0,
+          },
+          growth: {
+            type: Number,
+            default: 0,
+          },
         },
       ],
     },
 
-    // 🎯 GOALS PROGRESS
     goals: [
       {
-        name: String, // "Emergency Fund", "Buy a Home", etc.
-        targetAmount: Number, // Total amount needed
-        currentAmount: Number, // Amount saved so far
-        progress: Number, // Percentage (currentAmount/targetAmount)*100
+        name: {
+          type: String,
+          default: "Goal",
+        },
+        targetAmount: {
+          type: Number,
+          default: 0,
+        },
+        currentAmount: {
+          type: Number,
+          default: 0,
+        },
+        progress: {
+          type: Number,
+          default: 0,
+        },
         createdAt: {
           type: Date,
           default: Date.now,
         },
-        targetDate: Date, // When you want to achieve this
+        targetDate: {
+          type: Date,
+          default: Date.now,
+        },
         completed: {
           type: Boolean,
           default: false,
@@ -102,19 +143,39 @@ const UserSchema = new Schema(
       },
     ],
 
-    // 💳 ALL TRANSACTIONS (Combined view)
     allTransactions: [
       {
-        title: String,
-        amount: Number,
-        type: String, // "income" or "expense"
-        category: String,
+        title: {
+          type: String,
+          required: true,
+          default: "Transaction",
+        },
+        amount: {
+          type: Number,
+          required: true,
+          default: 0,
+        },
+        type: {
+          type: String,
+          required: true,
+          default: "income",
+        },
+        category: {
+          type: String,
+          default: "General",
+        },
         date: {
           type: Date,
           default: Date.now,
         },
-        relatedGoal: String, // If transaction is related to a goal
-        description: String,
+        relatedGoal: {
+          type: String,
+          default: "",
+        },
+        description: {
+          type: String,
+          default: "",
+        },
       },
     ],
 
@@ -128,6 +189,7 @@ const UserSchema = new Schema(
         limit: {
           type: Number,
           required: true,
+          default: 0,
         },
         spent: {
           type: Number,
@@ -149,19 +211,8 @@ const UserSchema = new Schema(
       type: String,
       default: "Buy a Home",
     },
-
-    // advisorHistory: [
-    //   {
-    //     question: String,
-    //     response: String,
-    //     createdAt: {
-    //       type: Date,
-    //       default: Date.now,
-    //     },
-    //   },
-    // ],
   },
   { timestamps: true }
 );
 
-export default mongoose.model("User", UserSchema);
+export default model("User", UserSchema);

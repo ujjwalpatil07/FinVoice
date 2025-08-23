@@ -78,7 +78,7 @@ export default function TransactionsPage() {
     };
 
     return (
-        <div className="p-4 sm:p-6 md:p-8 max-w-6xl mx-auto space-y-6">
+        <div className="flex-1 p-4 sm:p-6 mx-auto space-y-6">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
                 Transactions
             </h1>
@@ -94,7 +94,7 @@ export default function TransactionsPage() {
                     onChange={(e) =>
                         setNewTransaction((prev) => ({ ...prev, date: e.target.value }))
                     }
-                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
                 />
                 <input
                     type="text"
@@ -134,7 +134,7 @@ export default function TransactionsPage() {
                     className="flex items-center whitespace-nowrap space-x-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white rounded-xl transition"
                 >
                     <Plus className="h-4 w-4" />
-                    <span>{editTransactionId ? "Update" : "Add"} Transaction</span>
+                    <span>{editTransactionId ? "Update" : "Add"}</span>
                 </button>
             </div>
 

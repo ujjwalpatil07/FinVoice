@@ -232,7 +232,7 @@ export default function Navbar() {
                 aria-label="User menu"
               >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white font-semibold text-sm">
-                  {authUser?.name?.charAt(0) || "U"}
+                  {authUser?.fullName?.charAt(0) || "U"}
                 </div>
                 <div className="hidden lg:block">
                   <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
@@ -243,7 +243,7 @@ export default function Navbar() {
                 <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
                   <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                     <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                      {authUser?.name}
+                      {authUser?.fullName}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                       {authUser?.email}
@@ -309,12 +309,12 @@ export default function Navbar() {
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
                     <span className="text-white font-semibold text-sm">
-                      {authUser.name?.charAt(0) || 'U'}
+                      {authUser?.fullName?.charAt(0) || 'U'}
                     </span>
                   </div>
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {authUser.name}
+                      {authUser?.fullName}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {authUser.email}

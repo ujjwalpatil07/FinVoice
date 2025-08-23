@@ -1,7 +1,8 @@
 import express from "express"; // Main Express framework
 import dotenv from "dotenv"; // Loads .env variables
 import cors from "cors"; // Allow cross-origin requests
-import userAuthRoute from "../nodeServer/routes/authRoutes/userAuthRoute.mjs"
+import userAuthRoute from "./routes/authRoutes/userAuthRoute.mjs";
+import financeRoute from "./routes/authRoutes/userFinance.js";
 
 
 dotenv.config();
@@ -25,6 +26,8 @@ app.use(
 connectDB();
 
 app.use("/user", userAuthRoute);
+
+app.use("/finance", financeRoute);
 
 app.use((err, req, res, next) => {
   return res.status(err.status || 500).json({
